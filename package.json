@@ -32,7 +32,7 @@
     "name": "Oleg Alekseev",
     "url": "https://github.com/woyaxnini"
   },
-  "license": "MIT",
+  "license": "MIT AND Commons-Clause",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/woyaxnini/mcp-max-messenger.git"
