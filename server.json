@@ -1,17 +1,17 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.woyaxnini/max-messenger",
-  "description": "MCP server for MAX Messenger — Russian national messenger by VK with 75M+ users. Provides 21 tools to send and read messages, manage chats and members, send media (photo/video/audio/file), use inline keyboard buttons (callback, link, contact, geo, mini-app), and handle incoming events. Designed for AI agents, ERP integrations (1C, AX), approval workflows, and automation via n8n or any MCP client.",
+  "description": "MCP server for MAX Messenger by VK. 21 tools: messages, media, buttons, members, events.",
   "repository": {
     "url": "https://github.com/woyaxnini/mcp-max-messenger",
     "source": "github"
   },
-  "version": "1.1.0",
+  "version": "1.2.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@woyax/mcp-max-messenger",
-      "version": "1.1.0",
+      "version": "1.2.1",
       "runtime": "node",
       "transport": {
         "type": "stdio"
