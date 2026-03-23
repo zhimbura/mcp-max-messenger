@@ -1,29 +1,31 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.woyaxnini/max-messenger",
-  "description": "MCP server for MAX Messenger — Russian national messenger by VK.",
+  "description": "MCP server for MAX Messenger — Russian national messenger by VK with 75M+ users. Provides 21 tools to send and read messages, manage chats and members, send media (photo/video/audio/file), use inline keyboard buttons (callback, link, contact, geo, mini-app), and handle incoming events. Designed for AI agents, ERP integrations (1C, AX), approval workflows, and automation via n8n or any MCP client.",
   "repository": {
     "url": "https://github.com/woyaxnini/mcp-max-messenger",
     "source": "github"
   },
-  "version": "1.0.1",
+  "version": "1.1.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@woyax/mcp-max-messenger",
-      "version": "1.0.1",
+      "version": "1.1.0",
+      "runtime": "node",
       "transport": {
         "type": "stdio"
       },
       "environmentVariables": [
         {
           "name": "MAX_TOKEN",
-          "description": "Your MAX bot token from dev.max.ru",
+          "description": "MAX bot token from dev.max.ru — passed as Authorization header WITHOUT 'Bearer' prefix (MAX API quirk: non-standard auth)",
           "isRequired": true,
           "format": "string",
           "isSecret": true
         }
-      ]
+      ],
+      "instructions": "You are connected to MAX Messenger (max.ru) — Russian national messenger by VK. Base URL: platform-api.max.ru. Rate limit: 30 rps.\n\nKEY FACTS TO AVOID ERRORS:\n1. get_chats returns ONLY group chats. Personal dialogs are NOT listed — use get_updates to discover their chat_id.\n2. send_message and send_media require either chat_id (groups) OR user_id (direct messages) — not both, not neither.\n3. get_updates is for development/polling only. Production bots should use webhooks (POST /subscriptions).\n4. remove_admin: MAX API has a known bug — returns success:true but may not actually revoke rights. Only the chat owner can reliably remove admin rights manually in the app.\n5. remove_member: if the user has privacy mode enabled in MAX, the bot cannot re-add them after removal — warn the user before proceeding.\n6. answer_callback must be called within 30 seconds of button press — only practical via webhooks in production, not via polling.\n7. Media tokens (photo_id/token from send_media) are permanent and reusable in send_message attachments without re-uploading.\n8. open_app button type has a known MAX API bug (Field 'webApp' cannot be null) — avoid using it."
     }
   ]
 }

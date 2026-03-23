@@ -40,6 +40,7 @@ export interface Chat {
   is_public?: boolean;
   link?: string;
   description?: string | null;
+  pinned_message?: Message;
 }
 
 export interface ChatMember {
@@ -51,8 +52,22 @@ export interface ChatMember {
   avatar_url?: string;
 }
 
+export interface ChatAdmin {
+  user_id: number;
+  name: string;
+  username?: string;
+  is_bot: boolean;
+  permissions?: string[];
+  avatar_url?: string;
+}
+
 export interface ChatMembersResult {
   members: ChatMember[];
+  marker?: number;
+}
+
+export interface ChatAdminsResult {
+  members: ChatAdmin[];
   marker?: number;
 }
 
@@ -102,7 +117,8 @@ export interface MarkupElement {
   user_id?: number;
 }
 
-// Attachments
+// ─── Attachments ─────────────────────────────────────────────────────────────
+
 export type Attachment =
   | PhotoAttachment
   | VideoAttachment
@@ -182,7 +198,8 @@ export interface MessageButton {
   payload?: string;
 }
 
-// Request/Response types
+// ─── Request / Response types ─────────────────────────────────────────────────
+
 export interface GetMessagesParams {
   chat_id: number;
   message_ids?: string[];
@@ -201,6 +218,7 @@ export interface SendMessageParams {
   text: string;
   format?: MessageFormat;
   notify?: boolean;
+  disable_link_preview?: boolean;
   attachments?: Attachment[];
 }
 
@@ -231,4 +249,105 @@ export interface ChatsResult {
 export interface MaxApiError {
   code: string;
   message: string;
+}
+
+// ─── Updates (v1.1.0) ─────────────────────────────────────────────────────────
+
+export type UpdateType =
+  | 'message_created'
+  | 'message_edited'
+  | 'message_removed'
+  | 'message_callback'
+  | 'bot_started'
+  | 'bot_added'
+  | 'bot_removed'
+  | 'user_added'
+  | 'user_removed'
+  | 'message_chat_created'
+  | 'chat_title_changed';
+
+export interface Update {
+  update_type: UpdateType;
+  timestamp: number;
+  message?: Message;
+  callback?: Callback;
+  user?: User;
+  chat_id?: number;
+  inviter_id?: number;
+  admin_id?: number;
+  message_id?: string;
+}
+
+export interface UpdatesResult {
+  updates: Update[];
+  marker?: number;
+}
+
+export interface GetUpdatesParams {
+  limit?: number;
+  timeout?: number;
+  marker?: number;
+  types?: UpdateType[];
+}
+
+// ─── Callback (v1.1.0) ────────────────────────────────────────────────────────
+
+export interface Callback {
+  timestamp: number;
+  callback_id: string;
+  payload?: string;
+  user: User;
+  message?: Message;
+}
+
+export interface AnswerCallbackParams {
+  callback_id: string;
+  user_id: number;
+  message?: {
+    text: string;
+    format?: MessageFormat;
+    attachments?: Attachment[];
+  };
+  notification?: string;
+}
+
+// ─── Media upload (v1.1.0) ────────────────────────────────────────────────────
+
+export type MediaType = 'image' | 'video' | 'audio' | 'file';
+
+export interface UploadUrlResult {
+  url: string;
+  token?: string;
+}
+
+// ─── Chat management (v1.1.0) ─────────────────────────────────────────────────
+
+export interface EditChatParams {
+  chat_id: number;
+  title?: string;
+  description?: string | null;
+  icon?: { url: string } | null;
+  pin?: string | null;
+  notify_members?: boolean;
+}
+
+export type BotActionType =
+  | 'typing_on'
+  | 'sending_photo'
+  | 'sending_video'
+  | 'sending_audio'
+  | 'sending_file'
+  | 'mark_seen';
+
+// ─── Members management (v1.1.0) ─────────────────────────────────────────────
+
+export interface AddMembersParams {
+  chat_id: number;
+  user_ids: number[];
+}
+
+export interface RemoveMemberParams {
+  chat_id: number;
+  user_id: number;
+  block?: boolean;
 }
