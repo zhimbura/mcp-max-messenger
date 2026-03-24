@@ -1,11 +1,13 @@
 # mcp-max-messenger
 
 [![npm version](https://badge.fury.io/js/%40woyax%2Fmcp-max-messenger.svg)](https://www.npmjs.com/package/@woyax/mcp-max-messenger)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT + Commons Clause](https://img.shields.io/badge/License-MIT%20%2B%20Commons%20Clause-blue.svg)](https://github.com/woyaxnini/mcp-max-messenger/blob/main/LICENSE)
 
 **Первый MCP-сервер для мессенджера MAX** — национального мессенджера России от VK (75M+ пользователей).
 
-Подключите AI-клиентов (Claude Desktop, Cursor, n8n и любое MCP-совместимое приложение) к MAX: отправляйте и читайте сообщения, управляйте чатами, закрепляйте сообщения — через открытый стандарт [Model Context Protocol](https://modelcontextprotocol.io).
+Подключите AI-клиентов (Claude Desktop, Cursor, n8n и любое MCP-совместимое приложение) к MAX: отправляйте и читайте сообщения, управляйте чатами и участниками, отправляйте медиа, обрабатывайте нажатия кнопок, форматируйте HTML/Markdown — через открытый стандарт [Model Context Protocol](https://modelcontextprotocol.io).
+
+**21 инструмент** с полным покрытием MAX Bot API.
 
 ---
 
@@ -29,7 +31,7 @@
 
 Добавьте в конфиг Claude Desktop:
 
-**Mac:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
+**Mac:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
@@ -58,19 +60,56 @@ MAX_TOKEN=ВАШ_ТОКЕН MCP_TRANSPORT=http MCP_PORT=3000 npx @woyax/mcp-max-
 
 ---
 
-## Доступные инструменты
+## Доступные инструменты (21)
+
+### Сообщения
 
 | Инструмент | Описание |
 |------------|----------|
-| `get_bot_info` | Информация о боте (имя, ID, username) |
-| `get_chats` | Список групповых чатов бота |
-| `get_messages` | Чтение сообщений из чата |
-| `send_message` | Отправка сообщения (поддерживает inline-клавиатуру) |
-| `edit_message` | Редактирование отправленного сообщения |
+| `get_messages` | Чтение сообщений из чата (по chat_id или message_ids) |
+| `send_message` | Отправка сообщения: текст, HTML/Markdown, inline-клавиатура, медиавложения |
+| `edit_message` | Редактирование текста и вложений |
 | `delete_message` | Удаление сообщения |
-| `get_chat_members` | Участники чата |
 | `pin_message` | Закрепить сообщение в чате |
 | `unpin_message` | Открепить закреплённое сообщение |
+
+### Медиа
+
+| Инструмент | Описание |
+|------------|----------|
+| `send_media` | Загрузить и отправить фото, видео, аудио или файл по URL |
+| `send_action` | Показать статус: «печатает», «отправляет фото/видео/аудио/файл», «прочитано» |
+
+### Чаты
+
+| Инструмент | Описание |
+|------------|----------|
+| `get_bot_info` | Информация о боте: имя, ID, username, описание |
+| `get_chats` | Список групповых чатов бота |
+| `get_chat` | Полная информация о чате: участники, закреплённое сообщение, владелец |
+| `edit_chat` | Переименовать чат, сменить описание или иконку |
+
+### Участники
+
+| Инструмент | Описание |
+|------------|----------|
+| `get_chat_members` | Список участников чата с ролями |
+| `get_admins` | Список администраторов с правами |
+| `set_admin` | Назначить администратора |
+| `remove_admin` | Снять права администратора |
+| `add_members` | Добавить пользователей в групповой чат |
+| `remove_member` | Удалить пользователя из группового чата |
+
+### События
+
+| Инструмент | Описание |
+|------------|----------|
+| `get_updates` | Входящие события: сообщения, нажатия кнопок, новые диалоги (long polling) |
+| `answer_callback` | Ответ на нажатие inline-кнопки: уведомление или обновление сообщения |
+
+### Кнопки (через attachments в send_message)
+
+Поддерживаются 5 типов кнопок: `callback`, `link`, `message`, `request_contact`, `request_geo_location`.
 
 ---
 
@@ -80,13 +119,15 @@ MAX_TOKEN=ВАШ_ТОКЕН MCP_TRANSPORT=http MCP_PORT=3000 npx @woyax/mcp-max-
 
 > *«Отправь сообщение в чат 123456789: "Встреча через 10 минут"»*
 
+> *«Отправь запрос на согласование с кнопками Согласовать / Отклонить в рабочий чат»*
+
 > *«Покажи последние 10 сообщений из чата отдела продаж»*
 
-> *«Закрепи последнее сообщение в чате announcements»*
+> *«Отправь это фото в чат: https://example.com/image.jpg»*
 
-> *«Кто участники группы "Разработка"?»*
+> *«Кто участники группы "Разработка"? Назначь Алексея администратором.»*
 
-> *«Отредактируй сообщение mid.abc123 в чате 456789: напиши "Встреча перенесена на 15:00"»*
+> *«Проверь новые входящие сообщения и нажатия кнопок»*
 
 ---
 
@@ -123,8 +164,10 @@ src/
 │   ├── types.ts        # TypeScript-типы MAX API
 │   └── tools/
 │       ├── bot.ts      # get_bot_info
-│       ├── chats.ts    # get_chats, get_chat_members
-│       └── messages.ts # send/get/edit/delete/pin/unpin
+│       ├── chats.ts    # get_chats, get_chat, edit_chat, send_action
+│       ├── messages.ts # send/get/edit/delete/pin/unpin, send_media
+│       ├── members.ts  # get_chat_members, get_admins, set/remove_admin, add/remove_members
+│       └── updates.ts  # get_updates, answer_callback
 ├── transports/         # Транспортный слой — выбирается при запуске
 │   ├── stdio.ts        # Локальный режим (Claude Desktop, Cursor)
 │   └── http.ts         # Удалённый режим (Streamable HTTP)
@@ -139,19 +182,24 @@ src/
 - **Base URL**: `https://platform-api.max.ru`
 - **Rate limit**: 30 запросов/сек
 - **Групповые чаты**: `GET /chats` возвращает только групповые чаты
-- **Личные сообщения**: доступны через `GET /updates` (Long Polling) — используйте полученный `chat_id` с любым стандартным инструментом
+- **Личные сообщения**: доступны через `get_updates` — используйте полученный `chat_id` с любым стандартным инструментом
+- **Загрузка медиа**: двухэтапный процесс (загрузка → отправка). Токены аудио/видео приходят на этапе загрузки, не при передаче файла
 - **HTTP-транспорт**: Streamable HTTP (SSE устарел с MCP SDK 1.10.0)
+
+### Известные проблемы MAX API
+
+- `remove_admin` может вернуть `success: true`, не снимая права — подтверждённый баг на стороне MAX
+- Кнопка `open_app` возвращает «Field 'webApp' cannot be null» — баг MAX API
+- `add_members` может не сработать с ошибкой `add.participant.privacy`, если у пользователя включён безопасный режим
 
 ---
 
-## Roadmap (v1.1.0)
+## Планы развития
 
-- [ ] `get_updates` — входящие сообщения, диалоги, callback-события
-- [ ] Поддержка личных диалогов (тип dialog через /updates)
-- [ ] `send_file` / `send_photo` / `send_video`
-- [ ] `create_chat` — создание чатов и каналов
-- [ ] `manage_members` — добавление/удаление участников
-- [ ] Callback handling — обработка нажатий на кнопки
+- [ ] Тестирование HTTP-режима на VPS с интеграцией n8n
+- [ ] Hosted MCP-сервис (подключение по URL, без локальной установки)
+- [ ] Поддержка webhook для обработки событий в реальном времени
+- [ ] Тестирование `answer_callback` через n8n webhook workflow
 
 ---
 
@@ -165,6 +213,20 @@ src/
 
 ---
 
+## Автор и поддержка
+
+**Алексеев Олег** — архитектор интеграций ERP и AI.
+
+- 📧 woyaxnini@gmail.com · woyax@yandex.com
+- 💬 Telegram: [@ale_oleg](https://t.me/ale_oleg) · Канал: [@woyax_ai](https://t.me/woyax_ai)
+- 💬 MAX: [max.ru/id503610654564_biz](https://max.ru/id503610654564_biz)
+
+Нужна интеграция AI-агентов с вашей ERP, CRM или MAX? MCP-серверы, n8n-воркфлоу, AI-автоматизация — [пишите](mailto:woyaxnini@gmail.com).
+
+---
+
 ## Лицензия
 
-MIT © [Алексеев Олег](https://github.com/woyaxnini)
+MIT + Commons Clause © [Алексеев Олег](https://github.com/woyaxnini)
+
+Бесплатно для личного и корпоративного использования. Продажа как hosted-сервиса — только с разрешения автора. Подробности в файле [LICENSE](./LICENSE).

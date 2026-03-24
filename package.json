@@ -30,9 +30,10 @@
   ],
   "author": {
     "name": "Oleg Alekseev",
+    "email": "woyaxnini@gmail.com",
     "url": "https://github.com/woyaxnini"
   },
-  "license": "MIT AND Commons-Clause",
+  "license": "SEE LICENSE IN LICENSE",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/woyaxnini/mcp-max-messenger.git"

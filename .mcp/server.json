@@ -1,80 +1,31 @@
 {
-  "name": "@woyax/mcp-max-messenger",
-  "version": "1.0.0",
-  "displayName": "MAX Messenger",
-  "description": "MCP server for MAX Messenger — Russia's national messenger by VK. Send messages, read chats, manage conversations via AI.",
-  "homepage": "https://github.com/woyaxnini/mcp-max-messenger",
-  "repository": "https://github.com/woyaxnini/mcp-max-messenger",
-  "license": "MIT",
-  "author": {
-    "name": "Oleg Alekseev",
-    "url": "https://github.com/woyaxnini"
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.woyaxnini/max-messenger",
+  "description": "MCP server for MAX Messenger by VK. 21 tools: messages, media, buttons, members, events.",
+  "repository": {
+    "url": "https://github.com/woyaxnini/mcp-max-messenger",
+    "source": "github"
   },
-  "keywords": [
-    "mcp",
-    "max",
-    "max-messenger",
-    "vk",
-    "russia",
-    "messenger",
-    "bot",
-    "ai",
-    "automation"
-  ],
-  "categories": ["messaging", "communication"],
-  "transport": {
-    "stdio": {
-      "command": "npx",
-      "args": ["-y", "@woyax/mcp-max-messenger"],
-      "env": {
-        "MAX_TOKEN": {
-          "description": "Your MAX bot token. Get it from max.ru",
-          "required": true,
-          "secret": true
+  "version": "1.2.2",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@woyax/mcp-max-messenger",
+      "version": "1.2.2",
+      "runtime": "node",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "MAX_TOKEN",
+          "description": "MAX bot token from dev.max.ru — passed as Authorization header WITHOUT 'Bearer' prefix (MAX API quirk: non-standard auth)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
         }
-      }
-    },
-    "http": {
-      "url": "https://mcp.woyax.ru/mcp",
-      "description": "Hosted version — contact author for access"
-    }
-  },
-  "tools": [
-    {
-      "name": "get_bot_info",
-      "description": "Get information about the MAX bot (name, ID, username)"
-    },
-    {
-      "name": "get_chats",
-      "description": "List all group chats the bot participates in"
-    },
-    {
-      "name": "get_messages",
-      "description": "Read messages from a MAX chat"
-    },
-    {
-      "name": "send_message",
-      "description": "Send a text message to a MAX chat or user"
-    },
-    {
-      "name": "edit_message",
-      "description": "Edit the text of an existing message"
-    },
-    {
-      "name": "delete_message",
-      "description": "Delete a message sent by the bot"
-    },
-    {
-      "name": "get_chat_members",
-      "description": "Get the list of participants in a group chat"
-    },
-    {
-      "name": "pin_message",
-      "description": "Pin a message in a group chat"
-    },
-    {
-      "name": "unpin_message",
-      "description": "Unpin the currently pinned message in a group chat"
+      ],
+      "instructions": "You are connected to MAX Messenger (max.ru) — Russian national messenger by VK. Base URL: platform-api.max.ru. Rate limit: 30 rps.\n\nKEY FACTS TO AVOID ERRORS:\n1. get_chats returns ONLY group chats. Personal dialogs are NOT listed — use get_updates to discover their chat_id.\n2. send_message and send_media require either chat_id (groups) OR user_id (direct messages) — not both, not neither.\n3. get_updates is for development/polling only. Production bots should use webhooks (POST /subscriptions).\n4. remove_admin: MAX API has a known bug — returns success:true but may not actually revoke rights. Only the chat owner can reliably remove admin rights manually in the app.\n5. remove_member: if the user has privacy mode enabled in MAX, the bot cannot re-add them after removal — warn the user before proceeding.\n6. answer_callback must be called within 30 seconds of button press — only practical via webhooks in production, not via polling.\n7. Media tokens (photo_id/token from send_media) are permanent and reusable in send_message attachments without re-uploading.\n8. open_app button type has a known MAX API bug (Field 'webApp' cannot be null) — avoid using it."
     }
   ]
 }
