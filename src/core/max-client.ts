@@ -27,7 +27,59 @@ import type {
   MaxApiError as MaxApiErrorResponse,
 } from './types.js';
 
+import { lookup } from 'node:dns/promises';
+import { isIP } from 'node:net';
+
 const BASE_URL = 'https://platform-api.max.ru';
+const MAX_REDIRECTS = 5;
+
+function isPrivateAddress(ip: string): boolean {
+  if (isIP(ip) === 4) {
+    const [a, b] = ip.split('.').map(Number);
+    return (
+      a === 0 || a === 10 || a === 127 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 100 && b >= 64 && b <= 127)
+    );
+  }
+  const v6 = ip.toLowerCase();
+  if (v6.startsWith('::ffff:')) return isPrivateAddress(v6.slice(7));
+  return v6 === '::' || v6 === '::1' || v6.startsWith('fc') || v6.startsWith('fd') || v6.startsWith('fe80');
+}
+
+// Rejects URLs that point to the local machine or private network (SSRF guard for send_media)
+async function assertPublicUrl(raw: string): Promise<URL> {
+  const url = new URL(raw);
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+    throw new MaxApiError('URL_BLOCKED', `Only http/https URLs are allowed: ${raw}`);
+  }
+  const host = url.hostname.replace(/^\[|\]$/g, '').toLowerCase();
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) {
+    throw new MaxApiError('URL_BLOCKED', `Local URLs are not allowed: ${raw}`);
+  }
+  const addresses = isIP(host) ? [{ address: host }] : await lookup(host, { all: true });
+  if (addresses.some((a) => isPrivateAddress(a.address))) {
+    throw new MaxApiError('URL_BLOCKED', `URL resolves to a private address: ${raw}`);
+  }
+  return url;
+}
+
+async function fetchPublic(raw: string): Promise<Response> {
+  let current = raw;
+  for (let i = 0; i <= MAX_REDIRECTS; i++) {
+    const url = await assertPublicUrl(current);
+    const response = await fetch(url, { redirect: 'manual' });
+    const location = response.headers.get('location');
+    if (response.status >= 300 && response.status < 400 && location) {
+      current = new URL(location, url).toString();
+      continue;
+    }
+    return response;
+  }
+  throw new MaxApiError('URL_BLOCKED', 'Too many redirects');
+}
 
 export class MaxApiError extends Error {
   constructor(
@@ -372,7 +424,6 @@ export class MaxClient {
     }
 
     const text = await response.text();
-    console.error('[MAX UPLOAD RESPONSE]', text); // debug — remove after confirmed working
 
     if (!text || text.trim() === '') return {};
     // FIX: MAX upload server returns "<retval>1</retval>" (XML) for audio/video uploads.
@@ -392,10 +443,9 @@ export class MaxClient {
   }): Promise<SendMessageResult> {
     // Step 1: get upload URL from MAX
     const uploadInfo = await this.getUploadUrl(p.type);
-    console.error('[MAX UPLOAD INFO]', JSON.stringify(uploadInfo)); // debug
 
     // Step 2: download file from provided URL
-    const fileResponse = await fetch(p.fileUrl);
+    const fileResponse = await fetchPublic(p.fileUrl);
     if (!fileResponse.ok) {
       throw new MaxApiError('FETCH_FAILED', `Failed to fetch file from URL: ${p.fileUrl}`);
     }
